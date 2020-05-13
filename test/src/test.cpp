@@ -30,7 +30,7 @@ TEST(ApacheAccessLog, tokenizeLogEntry)
 	ASSERT_TRUE(ApacheAccessLog::extractHourMinuteFromDateTime(dateTime) == "12:44");
 }
 
-TEST(ApacheAccessLog, processStream)
+TEST(ApacheAccessLog, processStreamUnorderedSetTest)
 {
 	std::stringstream ss;
 	ss << accessLogEntry1 << std::endl;
@@ -41,6 +41,19 @@ TEST(ApacheAccessLog, processStream)
 	ApacheAccessLog accessLog;
 	accessLog.processStream(ss, "2020-05-25", "2020-05-25");
 	ASSERT_TRUE(accessLog._accessLogList.size() == 3);
+}
+
+TEST(ApacheAccessLog, processStreamDateIntervalTest)
+{
+	std::stringstream ss;
+	ss << accessLogEntry1.substr(0, 13) + "24/May/2020" + accessLogEntry1.substr(24) << std::endl;
+	ss << accessLogEntry1 << std::endl;
+	ss << accessLogEntry1.substr(0, 25) + "12:44:59" + accessLogEntry1.substr(34) << std::endl;
+	ss << accessLogEntry1.substr(0, 25) + "12:45:00" + accessLogEntry1.substr(34) << std::endl;
+	ss << accessLogEntry1.substr(0, 13) + "26/May/2020" + accessLogEntry1.substr(24) << std::endl;
+	ApacheAccessLog accessLog;
+	accessLog.processStream(ss, "2020-05-25", "2020-05-25");
+	ASSERT_TRUE(accessLog._accessLogList.size() == 2);
 }
 
 int main(int argc, char* argv[])
