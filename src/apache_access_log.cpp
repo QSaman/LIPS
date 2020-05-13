@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <cctype>
+#include <unordered_set>
 
 std::vector<std::string> ApacheAccessLog::tokenizeLogEntry(const std::string& line)
 {
@@ -39,18 +40,30 @@ std::string ApacheAccessLog::extractDateFromDateTime(const std::string& dateTime
 	return dateTime.substr(1, colonIndex - 1);
 }
 
+std::string ApacheAccessLog::extractHourMinuteFromDateTime(const std::string& dateTime)
+{
+	auto colonIndex = dateTime.find(':');
+	return dateTime.substr(colonIndex + 1, 5);
+}
+
 void ApacheAccessLog::processFile(const std::string& fileName, const std::string& startDate, const std::string& endDate)
+{
+	std::ifstream fin;
+	fin.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+	fin.open(fileName);
+	processStream(fin, startDate, endDate);
+}
+
+void ApacheAccessLog::processStream(std::istream& in, const std::string& startDate, const std::string& endDate)
 {
 	using namespace boost::gregorian;
 	date start(from_simple_string(startDate));
 	date end(from_simple_string(endDate));
 
-	std::ifstream fin;
-	fin.exceptions(std::ifstream::badbit | std::ifstream::failbit);
-	fin.open(fileName);
+	std::unordered_set<std::string> mark;
 
 	std::string line;
-	while (getline(fin, line))
+	while (getline(in, line))
 	{
 		auto tokens = tokenizeLogEntry(line);
 		if (tokens.size() <= 7 || tokens[IpIndex] == "::1")
@@ -60,8 +73,15 @@ void ApacheAccessLog::processFile(const std::string& fileName, const std::string
 			continue;
 		if (current > end)
 			return;
+		if (!mark.insert(tokens[IpIndex] + extractHourMinuteFromDateTime(tokens[DateTimeIndex])).second)
+			continue;
+
 		ApacheAccessLogEntry logEntry;
 		logEntry.ipQuery.setIpAddress(tokens[IpIndex]);
+		logEntry.ipQuery.queryCountry();
+		
+		//TODO Check country is valid
+
 		logEntry.datetimeStr = tokens[DateTimeIndex];
 		logEntry.referer = tokens[RefererIndex];
 		logEntry.userAgent = tokens[UserAgentIndex];
