@@ -7,6 +7,11 @@ void ApacheAccessLog::processFile(const std::string& fileName, const std::string
 {
 	using namespace boost::gregorian;
 	std::ifstream fin;
-	fin.exceptions(std::ifstream::badbit);
+	fin.exceptions(std::ifstream::badbit | std::ifstream::failbit);
 	fin.open(fileName);
+
+	std::string line;
+	while (getline(fin, line))
+	{
+	}
 }
