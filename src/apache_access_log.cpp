@@ -66,7 +66,7 @@ void ApacheAccessLog::processStream(std::istream& in, const std::string& startDa
 	while (getline(in, line))
 	{
 		auto tokens = tokenizeLogEntry(line);
-		if (tokens.size() <= 7 || tokens[IpIndex] == "::1")
+		if (tokens.size() <= 7 || !IPAddressQuery::isPublicIP(tokens[IpIndex]))
 			continue;
 		date current(from_uk_string(extractDateFromDateTime(tokens[DateTimeIndex])));
 		if (current < start)

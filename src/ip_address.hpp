@@ -7,6 +7,7 @@ class IPAddressQuery
 public:
 	IPAddressQuery(const std::string& ipAddress) : _ipAddress {ipAddress} {}
 	IPAddressQuery() = default;
+	static bool isPublicIP(const std::string& ipAddress);
 	void queryCountry();
 	void queryAllFields();
 	void setIpAddress(const std::string& ipAddress) { _ipAddress = ipAddress; }
