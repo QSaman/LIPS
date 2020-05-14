@@ -5,11 +5,12 @@ file(GLOB_RECURSE SRC_LIST src/*.c* src/*.h*)
 add_subdirectory("${CMAKE_SOURCE_DIR}/thirdparty/googletest" "thirdparty/googletest")
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/src)
+include_directories(${CMAKE_SOURCE_DIR}/thirdparty/curlpp/include)
 
 ################################################################################
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
-target_link_libraries(${PROJECT_NAME} gtest gtest_main lips-lib)
+target_link_libraries(${PROJECT_NAME} gtest gtest_main lips-lib curlpp)
 
 ################################################################################
 # Enabling C++11. Add these two lines after add_executable
