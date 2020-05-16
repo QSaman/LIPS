@@ -78,7 +78,6 @@ void ApacheAccessLog::processStream(std::istream& in, const std::string& startDa
 
 		ApacheAccessLogEntry logEntry;
 		logEntry.ipQuery.setIpAddress(tokens[IpIndex]);
-		logEntry.ipQuery.queryCountry();
 		
 		//TODO Check country is valid
 

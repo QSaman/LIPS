@@ -8,8 +8,6 @@ public:
 	IPAddressQuery(const std::string& ipAddress) : _ipAddress {ipAddress} {}
 	IPAddressQuery() = default;
 	static bool isPublicIP(const std::string& ipAddress);
-	void queryCountry();
-	void queryAllFields();
 	void setIpAddress(const std::string& ipAddress) { _ipAddress = ipAddress; }
 	const std::string& ipAddress() { return _ipAddress; }
 	const std::string& country() { return _country; }

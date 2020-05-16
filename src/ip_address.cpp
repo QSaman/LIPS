@@ -1,15 +1,5 @@
 #include "ip_address.hpp" 
 
-void IPAddressQuery::queryCountry()
-{
-	//TODO
-}
-
-void IPAddressQuery::queryAllFields()
-{
-	//TODO
-}
-
 bool IPAddressQuery::isPublicIP(const std::string& ipAddress)
 {
 	if (ipAddress == "::1")
