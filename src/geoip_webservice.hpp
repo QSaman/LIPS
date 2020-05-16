@@ -25,7 +25,7 @@ public:
 	~GeoIPWebService() = default;
 	bool updateIpAddressQuery(IPAddressQuery& ipAddressQuery);
 protected:
-	virtual bool reachedRequestLimit() = 0;
+	virtual bool increaseTimerCounter() = 0;
 	virtual bool processResponse(const std::string& response, IPAddressQuery& ipAddress) = 0;
 	HttpSession _httpSession;
 };
@@ -35,7 +35,7 @@ class FreeGeoIP : public GeoIPWebService
 public:
 	FreeGeoIP();
 protected:
-	virtual bool reachedRequestLimit() override;
+	virtual bool increaseTimerCounter() override;
 	virtual bool processResponse(const std::string& response, IPAddressQuery& ipAddress) override;
 private:
 	static WebServiceTimer<Hours, 15000> _timer;

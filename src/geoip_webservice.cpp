@@ -37,7 +37,7 @@ std::string HttpSession::sendRequest(const std::string& ipAddress)
 
 bool GeoIPWebService::updateIpAddressQuery(IPAddressQuery& ipAddressQuery)
 {
-	if (reachedRequestLimit())
+	if (increaseTimerCounter())
 		return false;
 	auto response = _httpSession.sendRequest(ipAddressQuery.ipAddress());
 	return processResponse(response, ipAddressQuery);
@@ -56,10 +56,10 @@ FreeGeoIP::FreeGeoIP()
 	_httpSession.setHttpHeader(list);
 }
 
-bool FreeGeoIP::reachedRequestLimit()
+bool FreeGeoIP::increaseTimerCounter()
 {
 	_timer.startTimer();
-	return _timer.reachedRequestLimit();
+	return _timer.increaseRequestCounter();
 }
 
 bool FreeGeoIP::processResponse(const std::string& response, IPAddressQuery& ipAddress)
