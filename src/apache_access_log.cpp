@@ -66,7 +66,7 @@ void ApacheAccessLog::processStream(std::istream& in, const std::string& startDa
 	while (getline(in, line))
 	{
 		auto tokens = tokenizeLogEntry(line);
-		if (tokens.size() <= 7 || !IPAddressQuery::isPublicIP(tokens[IpIndex]))
+		if (tokens.size() <= 7 || !IPAddressInfo::isPublicIP(tokens[IpIndex]))
 			continue;
 		date current(from_uk_string(extractDateFromDateTime(tokens[DateTimeIndex])));
 		if (current < start)
@@ -77,7 +77,7 @@ void ApacheAccessLog::processStream(std::istream& in, const std::string& startDa
 			continue;
 
 		ApacheAccessLogEntry logEntry;
-		logEntry.ipQuery.setIpAddress(tokens[IpIndex]);
+		logEntry.ipInfo.ipAddress = tokens[IpIndex];
 		
 		//TODO Check country is valid
 

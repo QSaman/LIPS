@@ -25,6 +25,5 @@ TEST(HttpSession, IpApi)
 	session.setUrl("http://ip-api.com/json/");
 	session.setGetParameters("fields=query,status,country,regionName,city,isp,as");
 	auto res = session.sendRequest("8.8.8.8");
-	std::cout << res;
 	ASSERT_TRUE(res == expected);
 }

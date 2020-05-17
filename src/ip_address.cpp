@@ -1,6 +1,6 @@
 #include "ip_address.hpp" 
 
-bool IPAddressQuery::isPublicIP(const std::string& ipAddress)
+bool IPAddressInfo::isPublicIP(const std::string& ipAddress)
 {
 	if (ipAddress == "::1")
 		return false;

@@ -7,7 +7,7 @@
 
 struct ApacheAccessLogEntry
 {
-	IPAddressQuery ipQuery;
+	IPAddressInfo ipInfo;
 	std::string datetimeStr;
 	std::string referer;
 	std::string userAgent;

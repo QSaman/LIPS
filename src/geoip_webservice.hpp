@@ -23,10 +23,10 @@ class GeoIPWebService
 {
 public:
 	~GeoIPWebService() = default;
-	bool updateIpAddressQuery(IPAddressQuery& ipAddressQuery);
+	bool updateIpAddressInfo(IPAddressInfo& ipAddressInfo);
 protected:
 	virtual bool increaseTimerCounter() = 0;
-	virtual bool processResponse(const std::string& response, IPAddressQuery& ipAddress) = 0;
+	virtual bool processResponse(const std::string& response, IPAddressInfo& ipAddress) = 0;
 	HttpSession _httpSession;
 };
 
@@ -36,7 +36,7 @@ public:
 	FreeGeoIP();
 protected:
 	virtual bool increaseTimerCounter() override;
-	virtual bool processResponse(const std::string& response, IPAddressQuery& ipAddress) override;
+	virtual bool processResponse(const std::string& response, IPAddressInfo& ipAddress) override;
 private:
 	static WebServiceTimer<Hours, 15000> _timer;
 };

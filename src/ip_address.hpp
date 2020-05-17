@@ -2,18 +2,15 @@
 
 #include <string>
 
-class IPAddressQuery
+struct IPAddressInfo
 {
-public:
-	IPAddressQuery(const std::string& ipAddress) : _ipAddress {ipAddress} {}
-	IPAddressQuery() = default;
+	IPAddressInfo(const std::string& ipAddress) : ipAddress {ipAddress} {}
+	IPAddressInfo() = default;
 	static bool isPublicIP(const std::string& ipAddress);
-	void setIpAddress(const std::string& ipAddress) { _ipAddress = ipAddress; }
-	const std::string& ipAddress() { return _ipAddress; }
-	const std::string& country() { return _country; }
-	const std::string& ispName() { return _ispName; }
-private:
-	std::string _ipAddress;
-	std::string _country;
-	std::string _ispName;
+
+	std::string ipAddress;
+	std::string country;
+	std::string city;
+	std::string regionName;
+	std::string ispName;
 };
