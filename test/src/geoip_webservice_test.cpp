@@ -18,3 +18,19 @@ TEST(FreeGeoIP, TestProcessResponse)
 	ASSERT_TRUE(ip.regionName == "my_region_name");
 	ASSERT_TRUE(ip.city == "my_city");
 }
+
+TEST(IpApi, TestProcessResponse)
+{
+	const std::string response = "{\"status\":\"success\",\"country\":\"United States\",\"regionName\":\"Virginia\",\"city\":\"Ashburn\",\"isp\":\"Google LLC\",\"as\":\"AS15169 Google LLC\",\"query\":\"8.8.8.8\"}";
+
+	IPAddressInfo ip;
+	ip.ipAddress = "8.8.8.8";
+	ASSERT_TRUE(ip.ipAddress == "8.8.8.8");
+
+	IpApi ws;
+	ws.processResponse(response, ip);
+	ASSERT_TRUE(ip.country == "United States");
+	ASSERT_TRUE(ip.regionName == "Virginia");
+	ASSERT_TRUE(ip.city == "Ashburn");
+	ASSERT_TRUE(ip.ispName == "Google LLC");
+}

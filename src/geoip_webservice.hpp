@@ -30,6 +30,7 @@ protected:
 	HttpSession _httpSession;
 };
 
+//https://freegeoip.app/
 class FreeGeoIP : public GeoIPWebService
 {
 public:
@@ -39,4 +40,16 @@ protected:
 	virtual bool processResponse(const std::string& response, IPAddressInfo& ipAddress) override;
 private:
 	static WebServiceTimer<Hours, 15000> _timer;
+};
+
+//https://ip-api.com/docs/api:json
+class IpApi : public GeoIPWebService
+{
+public:
+	IpApi();
+protected:
+	virtual bool increaseTimerCounter() override;
+	virtual bool processResponse(const std::string& response, IPAddressInfo& ipAddress) override;
+private:
+	static WebServiceTimer<Minutes, 45> _timer;
 };

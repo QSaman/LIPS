@@ -9,7 +9,28 @@
 
 #include <boost/property_tree/json_parser.hpp>
 
-WebServiceTimer<Hours, 15000> FreeGeoIP::_timer;
+WebServiceTimer<Hours, 15000>  FreeGeoIP::_timer;
+WebServiceTimer<Minutes, 45>   IpApi::_timer;
+
+namespace
+{
+	template<typename BinaryFunction>
+	void parseJson(const std::string& jsonString, BinaryFunction func)
+	{
+		std::istringstream iss(jsonString);
+		boost::property_tree::ptree json;
+		boost::property_tree::read_json(iss, json);
+
+		for (auto item : json)
+		{
+			auto value = item.second.get_value<std::string>();
+			if (value.empty())
+				continue;
+			if (!func(item.first, item.second.get_value<std::string>()))
+				return;
+		}
+	}
+}
 
 void HttpSession::setUrl(const std::string& url)
 {
@@ -67,20 +88,76 @@ bool FreeGeoIP::increaseTimerCounter()
 
 bool FreeGeoIP::processResponse(const std::string& response, IPAddressInfo& ipAddress)
 {
-	std::istringstream iss(response);
-	boost::property_tree::ptree json;
-	boost::property_tree::read_json(iss, json);
-	for (auto item : json)
+	bool updated = false;
+
+	parseJson(response, [&updated, &ipAddress, this](const std::string& key, const std::string& value)
 	{
-		auto value = item.second.get_value<std::string>();
-		if (value.empty())
-			continue;
-		if (item.first == "country_name")
+		if (key == "country_name")
+		{
 			ipAddress.country = value;
-		else if (item.first == "region_name")
+			updated = true;
+		}
+		else if (key == "region_name")
+		{
 			ipAddress.regionName = value;
-		else if (item.first == "city")
+			updated = true;
+		}
+		else if (key == "city")
+		{
 			ipAddress.city = value;
-	}
-	return true;
+			updated = true;
+		}
+		return true;
+	});
+	return updated;
+}
+
+IpApi::IpApi()
+{
+	_httpSession.setUrl("http://ip-api.com/json/");
+	_httpSession.setGetParameters("fields=query,status,country,regionName,city,isp,as");
+}
+
+bool IpApi::increaseTimerCounter()
+{
+	_timer.startTimer();
+	return _timer.increaseRequestCounter();
+}
+
+bool IpApi::processResponse(const std::string& response, IPAddressInfo& ipAddress)
+{
+	bool updated = false;
+
+	parseJson(response, [&updated, &ipAddress, this](const std::string& key, const std::string& value)
+	{
+		if (key == "status" && value != "success")
+		{
+			updated = false;
+			return false;
+		}
+
+		if (key == "country")
+		{
+			ipAddress.country = value;
+			updated = true;
+		}
+		else if (key == "regionName")
+		{
+			ipAddress.regionName = value;
+			updated = true;
+		}
+		else if (key == "city")
+		{
+			ipAddress.city = value;
+			updated = true;
+		}
+		else if (key == "isp")
+		{
+			ipAddress.ispName = value;
+			updated = true;
+		}
+		return true;
+	});
+
+	return updated;
 }
