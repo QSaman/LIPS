@@ -69,7 +69,7 @@ std::string HttpSession::sendRequest(const std::string& ipAddress)
 
 bool GeoIPWebService::updateIpAddressInfo(IPAddressInfo& ipAddressInfo)
 {
-	if (increaseTimerCounter())
+	if (!increaseTimerCounter())
 		return false;
 	auto response = _httpSession.sendRequest(ipAddressInfo.ipAddress);
 	bool ret = processResponse(response, ipAddressInfo);
