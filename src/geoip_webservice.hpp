@@ -2,9 +2,11 @@
 
 #include <curlpp/Easy.hpp>
 #include <list>
+#include <memory>
 
 #include "ip_address.hpp"
 #include "web_service_timer.hpp"
+#include "http_request_cache.hpp"
 
 class HttpSession
 {
@@ -14,9 +16,11 @@ public:
 	void setGetParameters(const std::string& parameters) {_getParas = parameters;}
 	std::string sendRequest(const std::string& ipAddress);
 private:
+	friend class GeoIPWebService;
     curlpp::Easy _request;
 	std::string _url;
 	std::string _getParas;
+	static std::unique_ptr<HttpRequestCache> _cache;
 };
 
 class GeoIPWebService

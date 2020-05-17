@@ -9,6 +9,8 @@
 
 #include <boost/property_tree/json_parser.hpp>
 
+std::unique_ptr<HttpRequestCache> HttpSession::_cache = std::unique_ptr<HttpRequestCache>(new HttpRequestMemoryCache());
+
 WebServiceTimer<Hours, 15000>  FreeGeoIP::_timer;
 WebServiceTimer<Minutes, 45>   IpApi::_timer;
 
@@ -46,6 +48,10 @@ void HttpSession::setHttpHeader(const std::list<std::string>& httpHeader)
 
 std::string HttpSession::sendRequest(const std::string& ipAddress)
 {
+	std::string response;
+	if (_cache->findResponse(ipAddress, response))
+		return response;
+
 	std::ostringstream oss;
 	const std::string url = [this, ipAddress]()
 	{
@@ -56,7 +62,9 @@ std::string HttpSession::sendRequest(const std::string& ipAddress)
 	}();
     _request.setOpt(new curlpp::options::Url(url));
 	oss << _request << std::flush;
-	return oss.str();
+	response = oss.str();
+	_cache->insert(ipAddress, response);
+	return response;
 }
 
 bool GeoIPWebService::updateIpAddressInfo(IPAddressInfo& ipAddressInfo)
@@ -64,7 +72,10 @@ bool GeoIPWebService::updateIpAddressInfo(IPAddressInfo& ipAddressInfo)
 	if (increaseTimerCounter())
 		return false;
 	auto response = _httpSession.sendRequest(ipAddressInfo.ipAddress);
-	return processResponse(response, ipAddressInfo);
+	bool ret = processResponse(response, ipAddressInfo);
+	if (!ret)
+		HttpSession::_cache->erase(ipAddressInfo.ipAddress);
+	return ret;
 }
 
 FreeGeoIP::FreeGeoIP()
