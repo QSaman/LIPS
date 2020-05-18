@@ -76,11 +76,14 @@ std::string HttpSession::sendRequest(const std::string& ipAddress)
 bool GeoIPWebService::updateIpAddressInfo(IPAddressInfo& ipAddressInfo)
 {
 	std::string response;
-	auto url = _httpSession.generateUrl(ipAddressInfo.ipAddress);
-	if (increaseTimerCounter())
-		response = _httpSession.sendRequest(ipAddressInfo.ipAddress);
-	else if (!HttpSession::_cache->findResponse(url, response))
-		return false;
+	const auto url = _httpSession.generateUrl(ipAddressInfo.ipAddress);
+	if (!HttpSession::_cache->findResponse(url, response))
+	{
+		if (increaseTimerCounter())
+			response = _httpSession.sendRequest(ipAddressInfo.ipAddress);
+		else
+			return false;
+	}
 	bool ret = processResponse(response, ipAddressInfo);
 	if (!ret)
 		HttpSession::_cache->erase(url);
@@ -104,6 +107,16 @@ bool FreeGeoIP::increaseTimerCounter()
 {
 	_timer.startTimer();
 	return _timer.increaseRequestCounter();
+}
+
+std::size_t FreeGeoIP::remainingRequests()
+{
+	return _timer.remainingRequests();
+}
+
+std::size_t FreeGeoIP::maximumRequests()
+{
+	return _timer.maximumRequests();
 }
 
 bool FreeGeoIP::processResponse(const std::string& response, IPAddressInfo& ipAddress)
@@ -140,6 +153,16 @@ bool IpApi::increaseTimerCounter()
 {
 	_timer.startTimer();
 	return _timer.increaseRequestCounter();
+}
+
+std::size_t IpApi::remainingRequests()
+{
+	return _timer.remainingRequests();
+}
+
+std::size_t IpApi::maximumRequests()
+{
+	return _timer.maximumRequests();
 }
 
 bool IpApi::processResponse(const std::string& response, IPAddressInfo& ipAddress)

@@ -82,14 +82,18 @@ TEST(GeoIPWebService, TestCacheManagement)
 
 	ASSERT_TRUE(ip.ipAddress == "8.8.8.8");
 
+	ASSERT_TRUE(wsList[0]->remainingRequests() == wsList[0]->maximumRequests());
 	ASSERT_TRUE(wsList[0]->updateIpAddressInfo(ip));
 	ASSERT_TRUE(ip.ispName.empty());
 
+	ASSERT_TRUE(wsList[0]->updateIpAddressInfo(ip));
+	ASSERT_TRUE(ip.ispName.empty());
+	//The previous request is cached, no need to increase the counter:
+	ASSERT_TRUE(wsList[0]->remainingRequests() == (wsList[0]->maximumRequests() - 1));
+
+	ASSERT_TRUE(wsList[1]->remainingRequests() == wsList[1]->maximumRequests());
 	ASSERT_TRUE(wsList[1]->updateIpAddressInfo(ip));
 	ASSERT_FALSE(ip.ispName.empty());
-
-	HttpSession::_cache->erase(wsList[1]->_httpSession.generateUrl("8.8.8.8"));
-
 
 	std::for_each(wsList.begin(), wsList.end(), [](const WebServicePtr& ptr)
 				  {

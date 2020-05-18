@@ -16,6 +16,8 @@ public:
 	bool reachedRequestLimit();
 	bool startTimer();
 	bool isTimerStarted() {return _webServiceStatus != WebServiceStatus::Ready;}
+	std::size_t remainingRequests() {return MaxRequests >= _requestCounter ? MaxRequests - _requestCounter : 0;}
+	std::size_t maximumRequests() {return MaxRequests;}
 private:
 	enum class WebServiceStatus
 	{

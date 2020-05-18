@@ -31,6 +31,8 @@ public:
 	bool updateIpAddressInfo(IPAddressInfo& ipAddressInfo);
 protected:
 	virtual bool increaseTimerCounter() = 0;
+	virtual std::size_t remainingRequests() = 0;
+	virtual std::size_t maximumRequests() = 0;
 	virtual bool processResponse(const std::string& response, IPAddressInfo& ipAddress) = 0;
 	HttpSession _httpSession;
 };
@@ -42,6 +44,8 @@ public:
 	FreeGeoIP();
 protected:
 	virtual bool increaseTimerCounter() override;
+	virtual std::size_t remainingRequests() override;
+	virtual std::size_t maximumRequests() override;
 	virtual bool processResponse(const std::string& response, IPAddressInfo& ipAddress) override;
 private:
 	static WebServiceTimer<Hours, 15000> _timer;
@@ -54,6 +58,8 @@ public:
 	IpApi();
 protected:
 	virtual bool increaseTimerCounter() override;
+	virtual std::size_t remainingRequests() override;
+	virtual std::size_t maximumRequests() override;
 	virtual bool processResponse(const std::string& response, IPAddressInfo& ipAddress) override;
 private:
 	static WebServiceTimer<Minutes, 45> _timer;
