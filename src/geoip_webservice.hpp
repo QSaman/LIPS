@@ -15,6 +15,7 @@ public:
 	void setHttpHeader(const std::list<std::string>& httpHeader); 
 	void setGetParameters(const std::string& parameters) {_getParas = parameters;}
 	std::string sendRequest(const std::string& ipAddress);
+	std::string generateUrl(const std::string& ipAddress);
 private:
 	friend class GeoIPWebService;
     curlpp::Easy _request;

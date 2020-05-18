@@ -1,8 +1,8 @@
 #include "http_request_cache.hpp"
 
-bool HttpRequestMemoryCache::findResponse(const std::string& ipAddress, std::string& response)
+bool HttpRequestMemoryCache::findResponse(const std::string& url, std::string& response)
 {
-	auto iter = _cache.find(ipAddress);
+	auto iter = _cache.find(url);
 	if (iter == _cache.end())
 	{
 		response.clear();
@@ -12,12 +12,12 @@ bool HttpRequestMemoryCache::findResponse(const std::string& ipAddress, std::str
 	return true;
 }
 
-bool HttpRequestMemoryCache::insert(const std::string& ipAddress, const std::string& response)
+bool HttpRequestMemoryCache::insert(const std::string& url, const std::string& response)
 {
-	return _cache.insert(Cache::value_type(ipAddress, response)).second;
+	return _cache.insert(Cache::value_type(url, response)).second;
 }
 
-bool HttpRequestMemoryCache::erase(const std::string& ipAddress)
+bool HttpRequestMemoryCache::erase(const std::string& url)
 {
-	return _cache.erase(ipAddress) > 0;
+	return _cache.erase(url) > 0;
 }

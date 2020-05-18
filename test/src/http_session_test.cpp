@@ -18,7 +18,7 @@ TEST(HttpSession, FreeGeoIP)
 	auto res = session.sendRequest("8.8.8.8");
 	ASSERT_TRUE(res == expected);
 
-	HttpSession::_cache->erase("8.8.8.8");
+	HttpSession::_cache->erase(session.generateUrl("8.8.8.8"));
 }
 
  
@@ -33,7 +33,7 @@ TEST(HttpSession, IpApi)
 	auto res = session.sendRequest("8.8.8.8");
 	ASSERT_TRUE(res == expected);
 
-	HttpSession::_cache->erase("8.8.8.8");
+	HttpSession::_cache->erase(session.generateUrl("8.8.8.8"));
 }
 
 TEST(HttpSession, HttpRequestCache)
@@ -48,17 +48,22 @@ TEST(HttpSession, HttpRequestCache)
 	auto res = session.sendRequest("8.8.8.8");
 	ASSERT_TRUE(res == expected);
 
-	//Changing web service. Since we have a value in cache from previous query, the library shouldn't send a new request:
-	session.setUrl("http://ip-api.com/json/");
-	session.setGetParameters("fields=query,status,country,regionName,city,isp,as");
-	res = session.sendRequest("8.8.8.8");
-	ASSERT_TRUE(res == expected);
-
-	HttpSession::_cache->erase("8.8.8.8");
 	const std::string expected2 = "{\"status\":\"success\",\"country\":\"United States\",\"regionName\":\"Virginia\",\"city\":\"Ashburn\",\"isp\":\"Google LLC\",\"as\":\"AS15169 Google LLC\",\"query\":\"8.8.8.8\"}";
-
-	res = session.sendRequest("8.8.8.8");
+	HttpSession session2;
+	session2.setUrl("http://ip-api.com/json/");
+	session2.setGetParameters("fields=query,status,country,regionName,city,isp,as");
+	res = session2.sendRequest("8.8.8.8");
 	ASSERT_TRUE(res == expected2);
 
-	HttpSession::_cache->erase("8.8.8.8");
+	//Note that country_name is modified
+	const std::string expectedModified = "{\"ip\":\"8.8.8.8\",\"country_code\":\"US\",\"country_name\":\"United States**\",\"region_code\":\"\",\"region_name\":\"\",\"city\":\"\",\"zip_code\":\"\",\"time_zone\":\"America/Chicago\",\"latitude\":37.751,\"longitude\":-97.822,\"metro_code\":0}\n";
+
+
+	HttpSession::_cache->erase(session.generateUrl("8.8.8.8"));
+	HttpSession::_cache->insert(session.generateUrl("8.8.8.8"), expectedModified);
+	res = session.sendRequest("8.8.8.8");
+	ASSERT_TRUE(res == expectedModified);
+
+	HttpSession::_cache->erase(session.generateUrl("8.8.8.8"));
+	HttpSession::_cache->erase(session2.generateUrl("8.8.8.8"));
 }

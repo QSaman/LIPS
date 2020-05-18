@@ -1,8 +1,14 @@
 #define protected public
+#define private public
 #include <geoip_webservice.hpp>
+#undef private
 #undef protected
 
 #include <gtest/gtest.h>
+
+#include <memory>
+#include <vector>
+#include <algorithm>
 
 TEST(FreeGeoIP, TestProcessResponse)
 {
@@ -57,4 +63,36 @@ TEST(IpApi, TestProcessResponseFailed)
 
 	IpApi ws;
 	ASSERT_FALSE(ws.processResponse(response, ip));
+}
+
+TEST(GeoIPWebService, TestCacheManagement)
+{
+	//Note that isp field is intentionally empty
+	const std::string invalidResponse = "{\"status\":\"success\",\"country\":\"United States\",\"regionName\":\"Virginia\",\"city\":\"Ashburn\",\"isp\":\"\",\"as\":\"AS15169 Google LLC\",\"query\":\"8.8.8.8\"}";
+
+	using WebServicePtr = std::unique_ptr<GeoIPWebService>;
+	using WebServiceList = std::vector<WebServicePtr>;
+
+	WebServiceList wsList;
+	wsList.push_back(WebServicePtr(new FreeGeoIP()));
+	wsList.push_back(WebServicePtr(new IpApi()));
+
+	IPAddressInfo ip;
+	ip.ipAddress = "8.8.8.8";
+
+	ASSERT_TRUE(ip.ipAddress == "8.8.8.8");
+
+	ASSERT_TRUE(wsList[0]->updateIpAddressInfo(ip));
+	ASSERT_TRUE(ip.ispName.empty());
+
+	ASSERT_TRUE(wsList[1]->updateIpAddressInfo(ip));
+	ASSERT_FALSE(ip.ispName.empty());
+
+	HttpSession::_cache->erase(wsList[1]->_httpSession.generateUrl("8.8.8.8"));
+
+
+	std::for_each(wsList.begin(), wsList.end(), [](const WebServicePtr& ptr)
+				  {
+					HttpSession::_cache->erase(ptr->_httpSession.generateUrl("8.8.8.8"));
+				  });
 }

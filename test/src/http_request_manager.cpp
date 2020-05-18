@@ -1,9 +1,11 @@
 #define private public
+#define protected public
+#include <http_request_manager.hpp>
 #include <geoip_webservice.hpp>
+#undef protected
 #undef private
 
 #include <gtest/gtest.h>
-#include <http_request_manager.hpp>
 
 
 TEST(HttpRequestManager, CountryTest)
@@ -15,7 +17,8 @@ TEST(HttpRequestManager, CountryTest)
 	ASSERT_TRUE(ip.country == "United States");
 	ASSERT_TRUE(ip.ispName.empty());
 
-	HttpSession::_cache->erase(ip.ipAddress);
+	for (auto& ws : manager._countryWS)
+	HttpSession::_cache->erase(ws->_httpSession.generateUrl(ip.ipAddress));
 }
 
 TEST(HttpRequestManager, IspTest)
@@ -28,5 +31,6 @@ TEST(HttpRequestManager, IspTest)
 	ASSERT_TRUE(manager.getISP(ip));
 	ASSERT_TRUE(!ip.ispName.empty());
 
-	HttpSession::_cache->erase(ip.ipAddress);
+	for (auto& ws : manager._ispNameWS)
+	HttpSession::_cache->erase(ws->_httpSession.generateUrl(ip.ipAddress));
 }

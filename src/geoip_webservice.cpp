@@ -46,13 +46,8 @@ void HttpSession::setHttpHeader(const std::list<std::string>& httpHeader)
     _request.setOpt(new curlpp::options::HttpHeader(httpHeader));
 }
 
-std::string HttpSession::sendRequest(const std::string& ipAddress)
+std::string HttpSession::generateUrl(const std::string& ipAddress)
 {
-	std::string response;
-	if (_cache->findResponse(ipAddress, response))
-		return response;
-
-	std::ostringstream oss;
 	const std::string url = [this, ipAddress]()
 	{
 		std::string url = _url + ipAddress;
@@ -60,21 +55,35 @@ std::string HttpSession::sendRequest(const std::string& ipAddress)
 			return url;
 		return url + "?" + _getParas;
 	}();
+	return url;
+}
+
+std::string HttpSession::sendRequest(const std::string& ipAddress)
+{
+	std::string response;
+	const std::string url = generateUrl(ipAddress);
+	if (_cache->findResponse(url, response))
+		return response;
+
+	std::ostringstream oss;
     _request.setOpt(new curlpp::options::Url(url));
 	oss << _request << std::flush;
 	response = oss.str();
-	_cache->insert(ipAddress, response);
+	_cache->insert(url, response);
 	return response;
 }
 
 bool GeoIPWebService::updateIpAddressInfo(IPAddressInfo& ipAddressInfo)
 {
-	if (!increaseTimerCounter())
+	std::string response;
+	auto url = _httpSession.generateUrl(ipAddressInfo.ipAddress);
+	if (increaseTimerCounter())
+		response = _httpSession.sendRequest(ipAddressInfo.ipAddress);
+	else if (!HttpSession::_cache->findResponse(url, response))
 		return false;
-	auto response = _httpSession.sendRequest(ipAddressInfo.ipAddress);
 	bool ret = processResponse(response, ipAddressInfo);
 	if (!ret)
-		HttpSession::_cache->erase(ipAddressInfo.ipAddress);
+		HttpSession::_cache->erase(url);
 	return ret;
 }
 
@@ -111,12 +120,10 @@ bool FreeGeoIP::processResponse(const std::string& response, IPAddressInfo& ipAd
 		else if (key == "region_name")
 		{
 			ipAddress.regionName = value;
-			updated = true;
 		}
 		else if (key == "city")
 		{
 			ipAddress.city = value;
-			updated = true;
 		}
 		return true;
 	});
