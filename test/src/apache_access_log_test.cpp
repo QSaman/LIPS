@@ -13,11 +13,40 @@
 #include <iostream>
 #include <algorithm>
 
+namespace
+{
 const std::string accessLogEntry1 = "8.8.8.8 - - [25/May/2020:12:44:27 -0400] \"GET / HTTP/1.1\" 301 231 \"https://foo.com/\" \"Mozilla/5.0 (Linux; ) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome; en_US; 212676898)\"";
 const std::string accessLogEntry2 = "217.218.78.26 - - [25/May/2020:13:44:27 -0400] \"GET / HTTP/1.1\" 301 231 \"https://bar.com/\" \"Mozilla/5.0 (Linux; ) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome; en_US; 212676898)\"";
 const std::string accessLogEntry3 = "193.8.139.22 - - [25/May/2020:14:44:27 -0400] \"GET / HTTP/1.1\" 301 231 \"https://baz.com/\" \"Mozilla/5.0 (Linux; ) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome; en_US; 212676898)\"";
 
 std::vector<std::string> accessLogEntries = {accessLogEntry1, accessLogEntry2, accessLogEntry3};
+
+void resetIsp(ApacheAccessLog& accessLog)
+{
+	for (auto& entry : accessLog._accessLogList)
+	{
+		HttpSession::_cache->erase(accessLog._httpRequestManager._countryWS[0]->_httpSession.generateUrl(entry.ipInfo.ipAddress));
+	}
+
+	for (auto& val : accessLog._httpRequestManager._countryWS)
+		val->resetTimer();
+	for (auto& val : accessLog._httpRequestManager._ispNameWS)
+		val->resetTimer();
+}
+
+void resetCountry(ApacheAccessLog& accessLog)
+{
+	for (auto& entry : accessLog._accessLogList)
+	{
+		HttpSession::_cache->erase(accessLog._httpRequestManager._countryWS[0]->_httpSession.generateUrl(entry.ipInfo.ipAddress));
+	}
+
+	for (auto& val : accessLog._httpRequestManager._countryWS)
+		val->resetTimer();
+}
+
+}
+
 
 TEST(ApacheAccessLog, Exceptions)
 {
@@ -68,11 +97,8 @@ TEST(ApacheAccessLog, TestQueryCountries)
 {
 	std::stringstream ss;
 
-	std::for_each(accessLogEntries.begin(), accessLogEntries.end(),
-	              [&ss](const std::string& entry)
-				  {
-				  	ss << entry << std::endl;
-				  });
+	for (const auto& entry : accessLogEntries)
+		ss << entry << std::endl;
 	ApacheAccessLog accessLog;
 	accessLog.processStream(ss, "2020-05-25", "2020-05-25");
 	ASSERT_TRUE(accessLog._accessLogList.size() == 3);
@@ -86,13 +112,7 @@ TEST(ApacheAccessLog, TestQueryCountries)
 					ASSERT_FALSE(entry.ipInfo.country.empty());
 				  });
 
-	for (auto& entry : accessLog._accessLogList)
-	{
-		HttpSession::_cache->erase(accessLog._httpRequestManager._countryWS[0]->_httpSession.generateUrl(entry.ipInfo.ipAddress));
-	}
-
-	for (auto& val : accessLog._httpRequestManager._countryWS)
-		val->resetTimer();
+	resetCountry(accessLog);
 }
 
 TEST(ApacheAccessLog, TestqueryIspNames)
@@ -127,13 +147,58 @@ TEST(ApacheAccessLog, TestqueryIspNames)
 
 	ASSERT_TRUE(cnt == 2);
 
-	for (auto& entry : accessLog._accessLogList)
-	{
-		HttpSession::_cache->erase(accessLog._httpRequestManager._countryWS[0]->_httpSession.generateUrl(entry.ipInfo.ipAddress));
-	}
+	resetIsp(accessLog);
+}
 
-	for (auto& val : accessLog._httpRequestManager._countryWS)
-		val->resetTimer();
-	for (auto& val : accessLog._httpRequestManager._ispNameWS)
-		val->resetTimer();
+TEST(ApacheAccessLog, TestGetSummaryByCountry)
+{
+	const std::string expected = "Iran: 2\nUnited States: 1\n";
+	std::stringstream ss;
+
+	for (const auto& entry : accessLogEntries)
+		ss << entry << std::endl;
+	ApacheAccessLog accessLog;
+	accessLog.processStream(ss, "2020-05-25", "2020-05-25");
+	ASSERT_TRUE(accessLog._accessLogList.size() == 3);
+
+	auto result = accessLog.getSummaryByCountry();
+
+	ASSERT_TRUE(result == expected);
+
+	resetCountry(accessLog);
+}
+
+TEST(ApacheAccessLog, TestGetSummaryByCountryHtml)
+{
+	std::stringstream ss;
+
+	for (const auto& entry : accessLogEntries)
+		ss << entry << std::endl;
+	ApacheAccessLog accessLog;
+	accessLog.processStream(ss, "2020-05-25", "2020-05-25");
+	ASSERT_TRUE(accessLog._accessLogList.size() == 3);
+
+	auto result = accessLog.getSummaryByCountryHtml();
+
+	ASSERT_TRUE(!result.empty());
+
+	resetCountry(accessLog);
+}
+
+TEST(ApacheAccessLog, TestGetItemsHtml)
+{
+	std::stringstream ss;
+
+	for (const auto& entry : accessLogEntries)
+		ss << entry << std::endl;
+	ApacheAccessLog accessLog;
+	accessLog.setCountry("Iran");
+	accessLog.processStream(ss, "2020-05-25", "2020-05-25");
+	ASSERT_TRUE(accessLog._accessLogList.size() == 3);
+
+	auto result = accessLog.getItemsHtml();
+
+	ASSERT_TRUE(!result.empty());
+
+	resetIsp(accessLog);
 }

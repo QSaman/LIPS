@@ -221,13 +221,9 @@ std::string ApacheAccessLog::getItemsHtml() const
 	const AccessLogList list = [this]()
 	{
 		AccessLogList list;
-		std::size_t i, j;
-		const auto len = _accessLogList.size();
-		for (i = 0; i < len; i = j)
-		{
-			for (j = i + 1; j < len && _accessLogList[i].ipInfo.country == _accessLogList[j].ipInfo.country; ++j);
-			list.push_back(_accessLogList[i]);
-		}
+		for (const auto& entry : _accessLogList)
+			if (entry.ipInfo.country == _country)
+				list.push_back(entry);
 		return list;
 	}();
 
