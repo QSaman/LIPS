@@ -84,6 +84,7 @@ TEST(GeoIPWebService, TestCacheManagement)
 
 	ASSERT_TRUE(wsList[0]->remainingRequests() == wsList[0]->maximumRequests());
 	ASSERT_TRUE(wsList[0]->updateIpAddressInfo(ip));
+	ASSERT_TRUE(wsList[0]->remainingRequests() == (wsList[0]->maximumRequests() - 1));
 	ASSERT_TRUE(ip.ispName.empty());
 
 	ASSERT_TRUE(wsList[0]->updateIpAddressInfo(ip));
