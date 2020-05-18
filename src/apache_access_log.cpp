@@ -14,14 +14,11 @@ namespace
 	using CountryFrequency = std::pair<std::string, std::size_t>;
 	using CountryFrequencyList = std::vector<CountryFrequency>;
 
-	CountryFrequencyList constructCountryFreq(ApacheAccessLog::AccessLogList& accessLogList)
+	CountryFrequencyList constructCountryFreq(const ApacheAccessLog::AccessLogList& accessLogList)
 	{
 		CountryFrequencyList ret;
-		std::sort(accessLogList.begin(), accessLogList.end(), [](const ApacheAccessLogEntry& left, const ApacheAccessLogEntry& right)
-				  {
-				  	return left.ipInfo.country < right.ipInfo.country;
-				  });
 		std::size_t i, j;
+		//Assuming the list is sorted by country names:
 		for (i = 0; i < accessLogList.size(); i = j)
 		{
 			for (j = i + 1; j < accessLogList.size() && accessLogList[i].ipInfo.country == accessLogList[j].ipInfo.country; ++j);
@@ -98,15 +95,15 @@ std::string ApacheAccessLog::extractHourMinuteFromDateTime(const std::string& da
 	return dateTime.substr(colonIndex + 1, 5);
 }
 
-void ApacheAccessLog::processFile(const std::string& fileName, const std::string& startDate, const std::string& endDate)
+bool ApacheAccessLog::processFile(const std::string& fileName, const std::string& startDate, const std::string& endDate)
 {
 	std::ifstream fin;
 	fin.exceptions(std::ifstream::badbit | std::ifstream::failbit);
 	fin.open(fileName);
-	processStream(fin, startDate, endDate);
+	return processStream(fin, startDate, endDate);
 }
 
-void ApacheAccessLog::processStream(std::istream& in, const std::string& startDate, const std::string& endDate)
+bool ApacheAccessLog::processStream(std::istream& in, const std::string& startDate, const std::string& endDate)
 {
 	this->startDate = startDate;
 	this->endDate = endDate;
@@ -127,7 +124,7 @@ void ApacheAccessLog::processStream(std::istream& in, const std::string& startDa
 		if (current < start)
 			continue;
 		if (current > end)
-			return;
+			return true;
 		if (!mark.insert(tokens[IpIndex] + extractHourMinuteFromDateTime(tokens[DateTimeIndex])).second)
 			continue;
 
@@ -141,6 +138,9 @@ void ApacheAccessLog::processStream(std::istream& in, const std::string& startDa
 		logEntry.userAgent = tokens[UserAgentIndex];
 		_accessLogList.push_back(logEntry);
 	}
+	if (!queryCountries())
+		return false;
+	return queryIspNames();
 }
 
 bool ApacheAccessLog::queryCountries()
@@ -148,36 +148,51 @@ bool ApacheAccessLog::queryCountries()
 	for (auto& val : _accessLogList)
 		if (!_httpRequestManager.getCountry(val.ipInfo))
 			return false;
+	std::sort(_accessLogList.begin(), _accessLogList.end(),
+	          [](const ApacheAccessLogEntry& left, const ApacheAccessLogEntry& right)
+			  {
+			  	return left.ipInfo.country < right.ipInfo.country;
+			  });
 	return true;
 }
 
 bool ApacheAccessLog::queryIspNames()
 {
+	if (_country.empty())
+		return true;
+
 	for (auto& val : _accessLogList)
+	{
+		if (val.ipInfo.country != _country)
+			continue;
 		if (!_httpRequestManager.getISP(val.ipInfo))
 			return false;
+	}
 	return true;
 }
 
-bool ApacheAccessLog::getSummaryByCountry(std::string& result)
+std::string ApacheAccessLog::getSummaryByCountry() const
 {
-	result.clear();
-	if (!queryCountries())
-		return false;
+	std::string result;
+
+	if (_accessLogList.size() == 0)
+		return result;
+
 	auto list = constructCountryFreq(_accessLogList);
 	std::for_each(list.begin(), list.end(),
 	              [&result](const CountryFrequency& cf)
 				  {
 				  	result += cf.first + ": " + std::to_string(cf.second) + "\n";
 				  });
-	return true;
+	return result;
 }
 
-bool ApacheAccessLog::getSummaryByCountryHtml(std::string& result)
+std::string ApacheAccessLog::getSummaryByCountryHtml() const
 {
-	result.clear();
-	if (!queryCountries())
-		return false;
+	std::string result;
+
+	if (_accessLogList.size() == 0)
+		return result;
 
 	result = "<!DOCTYPE html>\n<html>\n" + getHtmlHead();
 	result += 
@@ -197,47 +212,25 @@ bool ApacheAccessLog::getSummaryByCountryHtml(std::string& result)
 					          "  </tr>\n";
 				  });
 	result += "</table>\n</body>\n</html>\n";
-	return true;
+	return result;
 }
 
-bool ApacheAccessLog::filterCountry(const std::string& country)
+std::string ApacheAccessLog::getItemsHtml() const
 {
-	if (!queryCountries())
-		return false;
-
+	std::string result;
+	const AccessLogList list = [this]()
 	{
-		AccessLogList tmp;
-		std::for_each(_accessLogList.begin(), _accessLogList.end(),
-					  [&tmp, &country](const ApacheAccessLogEntry& entry)
-					  {
-						if (entry.ipInfo.country == country)
-							tmp.push_back(entry);
-					  });
+		AccessLogList list;
+		std::size_t i, j;
+		const auto len = _accessLogList.size();
+		for (i = 0; i < len; i = j)
+		{
+			for (j = i + 1; j < len && _accessLogList[i].ipInfo.country == _accessLogList[j].ipInfo.country; ++j);
+			list.push_back(_accessLogList[i]);
+		}
+		return list;
+	}();
 
-		std::sort(tmp.begin(), tmp.end(),
-				  [](const ApacheAccessLogEntry& left, const ApacheAccessLogEntry& right )
-				  {
-				  	return left.ipInfo.country < right.ipInfo.country;
-				  });
-		auto last = std::unique(tmp.begin(), tmp.end(),
-		                        [](const ApacheAccessLogEntry& left, const ApacheAccessLogEntry& right)
-								{
-									return left.ipInfo.country == right.ipInfo.country;
-								});
-		tmp.erase(last, tmp.end());
-
-		_accessLogList = std::move(tmp);
-	}
-
-	if (!queryIspNames())
-		return false;
-	return true;
-}
-
-bool ApacheAccessLog::getItemsHtml(const std::string& country, std::string& result)
-{
-	result.clear();
-	filterCountry(country);
 	result = "<!DOCTYPE html>\n<html>\n" + getHtmlHead();
 	result += 
 "<body>\n"
@@ -252,7 +245,7 @@ bool ApacheAccessLog::getItemsHtml(const std::string& country, std::string& resu
 "    <th>User Agent</th>\n"
 "  </tr>\n";
 
-	std::for_each(_accessLogList.begin(), _accessLogList.end(),
+	std::for_each(list.begin(), list.end(),
 	              [&result](const ApacheAccessLogEntry& entry)
 				  {
 				  	result += "  <tr>\n"
@@ -265,5 +258,5 @@ bool ApacheAccessLog::getItemsHtml(const std::string& country, std::string& resu
 					          "    <td>" + entry.userAgent + "</td>\n";
 				  });
 	result += "</table>\n</body>\n</html>\n";
-	return true;
+	return result;
 }

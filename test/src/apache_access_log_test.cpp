@@ -76,25 +76,13 @@ TEST(ApacheAccessLog, TestQueryCountries)
 	ApacheAccessLog accessLog;
 	accessLog.processStream(ss, "2020-05-25", "2020-05-25");
 	ASSERT_TRUE(accessLog._accessLogList.size() == 3);
-	auto checkLogFields = [](const ApacheAccessLogEntry& entry)
-	{
-		ASSERT_FALSE(entry.datetimeStr.empty());
-		ASSERT_FALSE(entry.referer.empty());
-		ASSERT_FALSE(entry.userAgent.empty());
-	};
 
 	std::for_each(accessLog._accessLogList.begin(), accessLog._accessLogList.end(),
-	              [&checkLogFields](const ApacheAccessLogEntry& entry)
+	              [](const ApacheAccessLogEntry& entry)
 				  {
-				  	checkLogFields(entry);
-					ASSERT_TRUE(entry.ipInfo.country.empty());
-				  });
-
-	accessLog.queryCountries();
-	std::for_each(accessLog._accessLogList.begin(), accessLog._accessLogList.end(),
-	              [&checkLogFields](const ApacheAccessLogEntry& entry)
-				  {
-				  	checkLogFields(entry);
+					ASSERT_FALSE(entry.datetimeStr.empty());
+					ASSERT_FALSE(entry.referer.empty());
+					ASSERT_FALSE(entry.userAgent.empty());
 					ASSERT_FALSE(entry.ipInfo.country.empty());
 				  });
 
@@ -114,8 +102,11 @@ TEST(ApacheAccessLog, TestqueryIspNames)
 		ss << val << std::endl;
 
 	ApacheAccessLog accessLog;
+	accessLog.setCountry("Iran");
+	
 	accessLog.processStream(ss, "2020-05-25", "2020-05-25");
 	ASSERT_TRUE(accessLog._accessLogList.size() == 3);
+
 	auto checkLogFields = [](const ApacheAccessLogEntry& entry)
 	{
 		ASSERT_FALSE(entry.datetimeStr.empty());
@@ -123,19 +114,18 @@ TEST(ApacheAccessLog, TestqueryIspNames)
 		ASSERT_FALSE(entry.userAgent.empty());
 	};
 
+	std::size_t cnt = 0;
 	for (auto& entry : accessLog._accessLogList)
 	{
 		checkLogFields(entry);
-		ASSERT_TRUE(entry.ipInfo.ispName.empty());
+		if (entry.ipInfo.country == "Iran")
+		{
+			++cnt;
+			ASSERT_FALSE(entry.ipInfo.ispName.empty());
+		}
 	}
 
-	accessLog.queryIspNames();
-
-	for (auto& entry : accessLog._accessLogList)
-	{
-		checkLogFields(entry);
-		ASSERT_FALSE(entry.ipInfo.ispName.empty());
-	}
+	ASSERT_TRUE(cnt == 2);
 
 	for (auto& entry : accessLog._accessLogList)
 	{

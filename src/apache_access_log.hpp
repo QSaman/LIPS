@@ -25,15 +25,15 @@ public:
 		UserAgentIndex = 8
 	};
 	using AccessLogList = std::vector<ApacheAccessLogEntry>;
-	void processFile(const std::string& fileName, const std::string& startDate, const std::string& endDate);
-	bool getSummaryByCountry(std::string& result);
-	bool getSummaryByCountryHtml(std::string& result);
-	bool getItemsHtml(const std::string& country, std::string& result);
+	bool processFile(const std::string& fileName, const std::string& startDate, const std::string& endDate);
+	void setCountry(const std::string& country) {_country = country;}
+	std::string getSummaryByCountry() const;
+	std::string getSummaryByCountryHtml() const;
+	std::string getItemsHtml() const;
 private:
-	void processStream(std::istream& in, const std::string& startDate, const std::string& endDate);
+	bool processStream(std::istream& in, const std::string& startDate, const std::string& endDate);
 	bool queryCountries();
 	bool queryIspNames();
-	bool filterCountry(const std::string& country);
 
 	static std::vector<std::string> tokenizeLogEntry(const std::string& line);
 	static std::string extractDateFromDateTime(const std::string& dateTime);
@@ -43,4 +43,5 @@ private:
 	HttpRequestManager _httpRequestManager;
 	std::string startDate;
 	std::string endDate;
+	std::string _country;
 };
