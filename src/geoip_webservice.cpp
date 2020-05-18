@@ -119,6 +119,11 @@ std::size_t FreeGeoIP::maximumRequests()
 	return _timer.maximumRequests();
 }
 
+void FreeGeoIP::resetTimer()
+{
+	_timer.resetTimer();
+}
+
 bool FreeGeoIP::processResponse(const std::string& response, IPAddressInfo& ipAddress)
 {
 	bool updated = false;
@@ -163,6 +168,11 @@ std::size_t IpApi::remainingRequests()
 std::size_t IpApi::maximumRequests()
 {
 	return _timer.maximumRequests();
+}
+
+void IpApi::resetTimer()
+{
+	_timer.resetTimer();
 }
 
 bool IpApi::processResponse(const std::string& response, IPAddressInfo& ipAddress)

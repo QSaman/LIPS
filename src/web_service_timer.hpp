@@ -15,10 +15,12 @@ public:
 	bool increaseRequestCounter();
 	bool reachedRequestLimit();
 	bool startTimer();
+	void resetTimer();
 	bool isTimerStarted() {return _webServiceStatus != WebServiceStatus::Ready;}
 	std::size_t remainingRequests() {return MaxRequests >= _requestCounter ? MaxRequests - _requestCounter : 0;}
 	std::size_t maximumRequests() {return MaxRequests;}
 private:
+
 	enum class WebServiceStatus
 	{
 		Ready,	//Web service is ready to send requests
@@ -58,13 +60,16 @@ bool WebServiceTimer<Duration, MaxRequests>::increaseRequestCounter()
 			_webServiceStatus = WebServiceStatus::Waiting;
 		return false;
 	}
-	else if (_webServiceStatus == WebServiceStatus::Waiting)
-	{
-		_webServiceStatus = WebServiceStatus::Ready;
-		startTimer();
-	}
 	++_requestCounter;
 	return true;
+}
+
+template<typename Duration, std::size_t MaxRequests>
+void WebServiceTimer<Duration, MaxRequests>::resetTimer()
+{
+	_webServiceStatus = WebServiceStatus::Ready;
+	_requestCounter = 0;
+	startTimer();
 }
 
 template<typename Duration, std::size_t MaxRequests>
@@ -78,6 +83,6 @@ bool WebServiceTimer<Duration, MaxRequests>::reachedRequestLimit()
 	if (duration <= unit)
 		return _requestCounter >= MaxRequests;
 	else
-		_requestCounter = 0;
+		resetTimer();
 	return false;
 }

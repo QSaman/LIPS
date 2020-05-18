@@ -33,6 +33,7 @@ protected:
 	virtual bool increaseTimerCounter() = 0;
 	virtual std::size_t remainingRequests() = 0;
 	virtual std::size_t maximumRequests() = 0;
+	virtual void resetTimer() = 0;
 	virtual bool processResponse(const std::string& response, IPAddressInfo& ipAddress) = 0;
 	HttpSession _httpSession;
 };
@@ -46,6 +47,7 @@ protected:
 	virtual bool increaseTimerCounter() override;
 	virtual std::size_t remainingRequests() override;
 	virtual std::size_t maximumRequests() override;
+	virtual void resetTimer() override;
 	virtual bool processResponse(const std::string& response, IPAddressInfo& ipAddress) override;
 private:
 	static WebServiceTimer<Hours, 15000> _timer;
@@ -60,6 +62,7 @@ protected:
 	virtual bool increaseTimerCounter() override;
 	virtual std::size_t remainingRequests() override;
 	virtual std::size_t maximumRequests() override;
+	virtual void resetTimer() override;
 	virtual bool processResponse(const std::string& response, IPAddressInfo& ipAddress) override;
 private:
 	static WebServiceTimer<Minutes, 45> _timer;

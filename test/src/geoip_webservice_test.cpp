@@ -77,6 +77,10 @@ TEST(GeoIPWebService, TestCacheManagement)
 	wsList.push_back(WebServicePtr(new FreeGeoIP()));
 	wsList.push_back(WebServicePtr(new IpApi()));
 
+	//Make sure other unit tests don't forget to rest the timer:
+	for (auto& val : wsList)
+		ASSERT_TRUE(val->remainingRequests() == val->maximumRequests());
+
 	IPAddressInfo ip;
 	ip.ipAddress = "8.8.8.8";
 
@@ -100,4 +104,7 @@ TEST(GeoIPWebService, TestCacheManagement)
 				  {
 					HttpSession::_cache->erase(ptr->_httpSession.generateUrl("8.8.8.8"));
 				  });
+
+	for (auto& val : wsList)
+		val->resetTimer();
 }
