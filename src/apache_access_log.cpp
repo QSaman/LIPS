@@ -27,6 +27,10 @@ namespace
 			cf.second = j - i;
 			ret.push_back(cf);
 		}
+		std::sort(ret.begin(), ret.end(), [](const CountryFrequency& left, const CountryFrequency& right)
+				  {
+				  	return left.second > right.second;
+				  });
 		return ret;
 	}
 
