@@ -33,6 +33,7 @@ public:
 
 	bool processFile(const std::string& fileName, const boost::gregorian::date& startDate, const boost::gregorian::date& endDate);
 	void setCountry(const std::string& country) {_country = country;}
+	const std::string& country() const {return _country;}
 	void setExcludedUsers(const UserList& excludedUsers) {_excludedUsers = excludedUsers;}
 
 	std::string getSummaryByCountry() const;

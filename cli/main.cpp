@@ -9,9 +9,8 @@
 #include <boost/program_options/errors.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp> 
 
-#include "apache_access_log.hpp"
-
-bool verbose;
+#include <apache_access_log.hpp>
+#include <cli_options.hpp>
 
 namespace
 {
@@ -136,6 +135,9 @@ void parseCLI(int argc, const char* argv[])
 		return file;
 	}();
 
+	if (verbose)
+		std::cout << "The country is set to " << logAccess.country() << std::endl;
+
 	const std::string summaryFile = [&vm]()
 	{
 		std::string file;
@@ -149,11 +151,15 @@ void parseCLI(int argc, const char* argv[])
 		excludedUsers = vm["exclude-user"].as<ApacheAccessLog::UserList>();
 	logAccess.setExcludedUsers(excludedUsers);
 
+	if (verbose)
+		std::cout << "Reading \"" << inputFileStr << "\"" << std::endl;
 	if (!logAccess.processFile(inputFileStr, start, end))
 	{
 		std::cerr << "Error in processing log file. Run with --verbose for more information" << std::endl;
 		std::exit(2);
 	}
+	if (verbose)
+		std::cout << "Fetch all IP information in \"" << inputFileStr << "\"" << std::endl;
 
 	if (logAccess.size() == 0)
 		return;

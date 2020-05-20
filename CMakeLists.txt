@@ -23,6 +23,7 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 include(FindBoost)
 find_package(Boost REQUIRED COMPONENTS date_time program_options)
 include_directories(${Boost_INCLUDE_DIRS})
+include_directories(src)
 
 include(FindOpenSSL)
 find_package(OpenSSL REQUIRED)
@@ -41,6 +42,6 @@ endif()
 
 ################################################################################
 
-add_executable(${PROJECT_NAME} ${SRC_LIST})
+add_executable(${PROJECT_NAME} ${SRC_LIST} cli/main.cpp)
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} curlpp)
 

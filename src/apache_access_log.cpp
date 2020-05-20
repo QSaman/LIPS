@@ -1,4 +1,5 @@
 #include "apache_access_log.hpp"
+#include "cli_options.hpp"
 
 #include <boost/exception/exception.hpp>
 #include <fstream>
@@ -59,13 +60,14 @@ std::vector<std::string> ApacheAccessLog::tokenizeLogEntry(const std::string& li
 {
 	std::vector<std::string> tokens;
 
-	std::string::size_type j = 0;
-	for (std::string::size_type i = 0; i < line.size(); i = j + 1)
+	std::string::size_type j = 1;
+	for (std::string::size_type i = 0; i < line.size(); i = j + 1, j += 2)
 	{
 		if (std::isspace(line[i]))
+		{
 			continue;
+		}
 
-		j = i + 1;
 		bool quotes = line[i] == '"';
 		int bracket = line[i] == '[' ? 1 : 0;
 		for (; j < line.size() && (!std::isspace(line[j]) || quotes || bracket != 0); ++j)
@@ -100,13 +102,16 @@ std::string ApacheAccessLog::extractHourMinuteFromDateTime(const std::string& da
 bool ApacheAccessLog::processFile(const std::string& fileName, const boost::gregorian::date& startDate, const boost::gregorian::date& endDate)
 {
 	std::ifstream fin;
-	fin.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+	//fin.exceptions(std::ifstream::badbit | std::ifstream::failbit);
+	fin.exceptions(std::ifstream::badbit);
 	fin.open(fileName);
 	return processStream(fin, startDate, endDate);
 }
 
 bool ApacheAccessLog::populateIPFields()
 {
+	if (verbose)
+		std::cout << "Fetching countries for IP list..." << std::endl;
 	if (!queryCountries())
 		return false;
 	return queryIspNames();
@@ -121,13 +126,15 @@ bool ApacheAccessLog::processStream(std::istream& in, const boost::gregorian::da
 	std::string line;
 	while (getline(in, line))
 	{
+		if (line.empty())
+			continue;
 		auto tokens = tokenizeLogEntry(line);
 		if (tokens.size() <= 7 || !IPAddressInfo::isPublicIP(tokens[IpIndex]))
 			continue;
 		date current(from_uk_string(extractDateFromDateTime(tokens[DateTimeIndex])));
-		if (current < startDate)
+		if (!startDate.is_not_a_date() && current < startDate)
 			continue;
-		if (current > endDate)
+		if (!endDate.is_not_a_date() && current > endDate)
 			return populateIPFields();
 		if (std::find(_excludedUsers.begin(), _excludedUsers.end(), tokens[UserIndex]) != _excludedUsers.end())
 			continue;
