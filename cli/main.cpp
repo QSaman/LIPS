@@ -169,7 +169,7 @@ void parseCLI(int argc, const char* argv[])
 		if (html)
 			report = logAccess.getSummaryByCountryHtml();
 		else
-			report = logAccess.getItemsHtml();
+			report = logAccess.getSummaryByCountry();
 		return report;
 	}();
 
