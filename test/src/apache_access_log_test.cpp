@@ -1,3 +1,4 @@
+#include <boost/date_time/gregorian/parsers.hpp>
 #define private public
 #define protected public
 #include <geoip_webservice.hpp>
@@ -13,10 +14,12 @@
 #include <iostream>
 #include <algorithm>
 
+#include <boost/date_time/gregorian/gregorian.hpp> 
+
 namespace
 {
 const std::string accessLogEntry1 = "8.8.8.8 - - [25/May/2020:12:44:27 -0400] \"GET / HTTP/1.1\" 301 231 \"https://foo.com/\" \"Mozilla/5.0 (Linux; ) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome; en_US; 212676898)\"";
-const std::string accessLogEntry2 = "217.218.78.26 - - [25/May/2020:13:44:27 -0400] \"GET / HTTP/1.1\" 301 231 \"https://bar.com/\" \"Mozilla/5.0 (Linux; ) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome; en_US; 212676898)\"";
+const std::string accessLogEntry2 = "217.218.78.26 - saman [25/May/2020:13:44:27 -0400] \"GET / HTTP/1.1\" 301 231 \"https://bar.com/\" \"Mozilla/5.0 (Linux; ) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome; en_US; 212676898)\"";
 const std::string accessLogEntry3 = "193.8.139.22 - - [25/May/2020:14:44:27 -0400] \"GET / HTTP/1.1\" 301 231 \"https://baz.com/\" \"Mozilla/5.0 (Linux; ) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome; en_US; 212676898)\"";
 
 std::vector<std::string> accessLogEntries = {accessLogEntry1, accessLogEntry2, accessLogEntry3};
@@ -45,13 +48,8 @@ void resetCountry(ApacheAccessLog& accessLog)
 		val->resetTimer();
 }
 
-}
+const boost::gregorian::date start = boost::gregorian::from_simple_string("2020-05-25");
 
-
-TEST(ApacheAccessLog, Exceptions)
-{
-	ApacheAccessLog accesLog;
-	ASSERT_THROW(accesLog.processFile("invalid_file_name", "2020-12-01", "2020-12-02"), std::ios_base::failure);
 }
 
 TEST(ApacheAccessLog, tokenizeLogEntry)
@@ -62,7 +60,7 @@ TEST(ApacheAccessLog, tokenizeLogEntry)
 	tokens = ApacheAccessLog::tokenizeLogEntry(accessLogEntry1);
 	ASSERT_TRUE(tokens.size() == 9);
 	auto dateTime = tokens[ApacheAccessLog::DateTimeIndex];
-	ASSERT_TRUE(dateTime == "[25/May/2020:12:44:27 -0400]");
+	ASSERT_TRUE(dateTime == "25/May/2020:12:44:27 -0400");
 	ASSERT_TRUE(ApacheAccessLog::extractDateFromDateTime(dateTime) == "25/May/2020");
 	ASSERT_TRUE(ApacheAccessLog::extractHourMinuteFromDateTime(dateTime) == "12:44");
 }
@@ -76,8 +74,9 @@ TEST(ApacheAccessLog, processStreamUnorderedSetTest)
 	ss << accessLogEntry1.substr(0, 25) + "12:45:59" + accessLogEntry1.substr(34) << std::endl;
 	ss << accessLogEntry1.substr(0, 25) + "12:46:00" + accessLogEntry1.substr(34) << std::endl;	//TODO Edge case: compare time with previous one
 	ApacheAccessLog accessLog;
-	accessLog.processStream(ss, "2020-05-25", "2020-05-25");
+	accessLog.processStream(ss, start, start);
 	ASSERT_TRUE(accessLog._accessLogList.size() == 3);
+	resetCountry(accessLog);
 }
 
 TEST(ApacheAccessLog, processStreamDateIntervalTest)
@@ -89,8 +88,23 @@ TEST(ApacheAccessLog, processStreamDateIntervalTest)
 	ss << accessLogEntry1.substr(0, 25) + "12:45:00" + accessLogEntry1.substr(34) << std::endl;
 	ss << accessLogEntry1.substr(0, 13) + "26/May/2020" + accessLogEntry1.substr(24) << std::endl;
 	ApacheAccessLog accessLog;
-	accessLog.processStream(ss, "2020-05-25", "2020-05-25");
+	accessLog.processStream(ss, start, start);
 	ASSERT_TRUE(accessLog._accessLogList.size() == 2);
+	resetCountry(accessLog);
+}
+
+TEST(ApacheAccessLog, TestExcludedUsers)
+{
+	std::stringstream ss;
+
+	for (const auto& entry : accessLogEntries)
+		ss << entry << std::endl;
+
+	ApacheAccessLog accessLog;
+	accessLog.setExcludedUsers({"saman"});
+	accessLog.processStream(ss, start, start);
+	ASSERT_TRUE(accessLog.size() == 2);
+	resetCountry(accessLog);
 }
 
 TEST(ApacheAccessLog, TestQueryCountries)
@@ -100,7 +114,7 @@ TEST(ApacheAccessLog, TestQueryCountries)
 	for (const auto& entry : accessLogEntries)
 		ss << entry << std::endl;
 	ApacheAccessLog accessLog;
-	accessLog.processStream(ss, "2020-05-25", "2020-05-25");
+	accessLog.processStream(ss, start, start);
 	ASSERT_TRUE(accessLog._accessLogList.size() == 3);
 
 	std::for_each(accessLog._accessLogList.begin(), accessLog._accessLogList.end(),
@@ -124,7 +138,7 @@ TEST(ApacheAccessLog, TestqueryIspNames)
 	ApacheAccessLog accessLog;
 	accessLog.setCountry("Iran");
 	
-	accessLog.processStream(ss, "2020-05-25", "2020-05-25");
+	accessLog.processStream(ss, start, start);
 	ASSERT_TRUE(accessLog._accessLogList.size() == 3);
 
 	auto checkLogFields = [](const ApacheAccessLogEntry& entry)
@@ -158,7 +172,7 @@ TEST(ApacheAccessLog, TestGetSummaryByCountry)
 	for (const auto& entry : accessLogEntries)
 		ss << entry << std::endl;
 	ApacheAccessLog accessLog;
-	accessLog.processStream(ss, "2020-05-25", "2020-05-25");
+	accessLog.processStream(ss, start, start);
 	ASSERT_TRUE(accessLog._accessLogList.size() == 3);
 
 	auto result = accessLog.getSummaryByCountry();
@@ -175,7 +189,7 @@ TEST(ApacheAccessLog, TestGetSummaryByCountryHtml)
 	for (const auto& entry : accessLogEntries)
 		ss << entry << std::endl;
 	ApacheAccessLog accessLog;
-	accessLog.processStream(ss, "2020-05-25", "2020-05-25");
+	accessLog.processStream(ss, start, start);
 	ASSERT_TRUE(accessLog._accessLogList.size() == 3);
 
 	auto result = accessLog.getSummaryByCountryHtml();
@@ -193,7 +207,7 @@ TEST(ApacheAccessLog, TestGetItemsHtml)
 		ss << entry << std::endl;
 	ApacheAccessLog accessLog;
 	accessLog.setCountry("Iran");
-	accessLog.processStream(ss, "2020-05-25", "2020-05-25");
+	accessLog.processStream(ss, start, start);
 	ASSERT_TRUE(accessLog._accessLogList.size() == 3);
 
 	auto result = accessLog.getItemsHtml();

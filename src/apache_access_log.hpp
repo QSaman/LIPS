@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <boost/date_time/gregorian/gregorian.hpp> 
 
 #include "ip_address.hpp"
 #include "http_request_manager.hpp"
@@ -20,18 +21,27 @@ public:
 	enum Fields
 	{
 		IpIndex = 0,
+		UserIndex = 2,
 		DateTimeIndex = 3,
 		RefererIndex = 7,
 		UserAgentIndex = 8
 	};
+
 	using AccessLogList = std::vector<ApacheAccessLogEntry>;
-	bool processFile(const std::string& fileName, const std::string& startDate, const std::string& endDate);
+	using UserList = std::vector<std::string>;
+	using size_type = AccessLogList::size_type;
+
+	bool processFile(const std::string& fileName, const boost::gregorian::date& startDate, const boost::gregorian::date& endDate);
 	void setCountry(const std::string& country) {_country = country;}
+	void setExcludedUsers(const UserList& excludedUsers) {_excludedUsers = excludedUsers;}
+
 	std::string getSummaryByCountry() const;
 	std::string getSummaryByCountryHtml() const;
 	std::string getItemsHtml() const;
+	size_type size() const {return _accessLogList.size();}
 private:
-	bool processStream(std::istream& in, const std::string& startDate, const std::string& endDate);
+	bool processStream(std::istream& in, const boost::gregorian::date& startDate, const boost::gregorian::date& endDate);
+	bool populateIPFields();
 	bool queryCountries();
 	bool queryIspNames();
 
@@ -41,7 +51,6 @@ private:
 
 	AccessLogList _accessLogList;
 	HttpRequestManager _httpRequestManager;
-	std::string startDate;
-	std::string endDate;
 	std::string _country;
+	UserList _excludedUsers;
 };

@@ -1,6 +1,5 @@
 #include "apache_access_log.hpp"
 
-#include <boost/date_time/gregorian/gregorian.hpp> 
 #include <boost/exception/exception.hpp>
 #include <fstream>
 #include <iostream>
@@ -78,7 +77,10 @@ std::vector<std::string> ApacheAccessLog::tokenizeLogEntry(const std::string& li
 			else if (line[j] == ']')
 				--bracket;
 		}
-		tokens.push_back(line.substr(i, j - i));
+		if (line[i] == '"' || line[i] == '[')
+			tokens.push_back(line.substr(i + 1, j - i - 2));
+		else
+			tokens.push_back(line.substr(i, j - i));
 	}
 	return tokens;
 }
@@ -86,7 +88,7 @@ std::vector<std::string> ApacheAccessLog::tokenizeLogEntry(const std::string& li
 std::string ApacheAccessLog::extractDateFromDateTime(const std::string& dateTime)
 {
 	auto colonIndex = dateTime.find(':');
-	return dateTime.substr(1, colonIndex - 1);
+	return dateTime.substr(0, colonIndex);
 }
 
 std::string ApacheAccessLog::extractHourMinuteFromDateTime(const std::string& dateTime)
@@ -95,7 +97,7 @@ std::string ApacheAccessLog::extractHourMinuteFromDateTime(const std::string& da
 	return dateTime.substr(colonIndex + 1, 5);
 }
 
-bool ApacheAccessLog::processFile(const std::string& fileName, const std::string& startDate, const std::string& endDate)
+bool ApacheAccessLog::processFile(const std::string& fileName, const boost::gregorian::date& startDate, const boost::gregorian::date& endDate)
 {
 	std::ifstream fin;
 	fin.exceptions(std::ifstream::badbit | std::ifstream::failbit);
@@ -103,14 +105,16 @@ bool ApacheAccessLog::processFile(const std::string& fileName, const std::string
 	return processStream(fin, startDate, endDate);
 }
 
-bool ApacheAccessLog::processStream(std::istream& in, const std::string& startDate, const std::string& endDate)
+bool ApacheAccessLog::populateIPFields()
 {
-	this->startDate = startDate;
-	this->endDate = endDate;
+	if (!queryCountries())
+		return false;
+	return queryIspNames();
+}
 
+bool ApacheAccessLog::processStream(std::istream& in, const boost::gregorian::date& startDate, const boost::gregorian::date& endDate)
+{
 	using namespace boost::gregorian;
-	date start(from_simple_string(startDate));
-	date end(from_simple_string(endDate));
 
 	std::unordered_set<std::string> mark;
 
@@ -121,10 +125,12 @@ bool ApacheAccessLog::processStream(std::istream& in, const std::string& startDa
 		if (tokens.size() <= 7 || !IPAddressInfo::isPublicIP(tokens[IpIndex]))
 			continue;
 		date current(from_uk_string(extractDateFromDateTime(tokens[DateTimeIndex])));
-		if (current < start)
+		if (current < startDate)
 			continue;
-		if (current > end)
-			return true;
+		if (current > endDate)
+			return populateIPFields();
+		if (std::find(_excludedUsers.begin(), _excludedUsers.end(), tokens[UserIndex]) != _excludedUsers.end())
+			continue;
 		if (!mark.insert(tokens[IpIndex] + extractHourMinuteFromDateTime(tokens[DateTimeIndex])).second)
 			continue;
 
@@ -138,9 +144,7 @@ bool ApacheAccessLog::processStream(std::istream& in, const std::string& startDa
 		logEntry.userAgent = tokens[UserAgentIndex];
 		_accessLogList.push_back(logEntry);
 	}
-	if (!queryCountries())
-		return false;
-	return queryIspNames();
+	return populateIPFields();
 }
 
 bool ApacheAccessLog::queryCountries()

@@ -21,7 +21,7 @@ set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 include(FindBoost)
-find_package(Boost REQUIRED COMPONENTS date_time)
+find_package(Boost REQUIRED COMPONENTS date_time program_options)
 include_directories(${Boost_INCLUDE_DIRS})
 
 include(FindOpenSSL)

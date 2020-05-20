@@ -10,7 +10,7 @@ include_directories(${CMAKE_SOURCE_DIR}/thirdparty/curlpp/include)
 ################################################################################
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
-target_link_libraries(${PROJECT_NAME} gtest gtest_main lips-lib curlpp)
+target_link_libraries(${PROJECT_NAME} gtest gtest_main lips-lib curlpp ${Boost_LIBRARIES})
 
 ################################################################################
 # Enabling C++11. Add these two lines after add_executable
