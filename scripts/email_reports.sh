@@ -32,3 +32,6 @@ then
 	report=$(cat "$countryReport")
 	echo -e "Subject: Access to Your Website From $country [$yesterday_date]\n${emailHeader}\n$report\n" | sendmail "$sendMailTo"
 fi
+
+rm -f "$countryReport"
+rm -f "$summaryReport"
