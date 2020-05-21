@@ -254,7 +254,7 @@ std::string ApacheAccessLog::getItemsHtml() const
 "    <th>City</th>\n"
 "    <th>Region Name</th>\n"
 "    <th>As</th>\n"
-"    <th>Organization</th>\n"
+"    <th>Org</th>\n"
 "    <th>User Agent</th>\n"
 "  </tr>\n";
 
