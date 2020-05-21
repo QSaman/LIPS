@@ -253,6 +253,8 @@ std::string ApacheAccessLog::getItemsHtml() const
 "    <th>Datetime</th>\n"
 "    <th>City</th>\n"
 "    <th>Region Name</th>\n"
+"    <th>As</th>\n"
+"    <th>Organization</th>\n"
 "    <th>User Agent</th>\n"
 "  </tr>\n";
 
@@ -266,6 +268,8 @@ std::string ApacheAccessLog::getItemsHtml() const
 					          "    <td>" + entry.datetimeStr + "</td>\n"
 					          "    <td>" + entry.ipInfo.city + "</td>\n"
 					          "    <td>" + entry.ipInfo.regionName + "</td>\n"
+					          "    <td>" + entry.ipInfo.as + "</td>\n"
+					          "    <td>" + entry.ipInfo.organization + "</td>\n"
 					          "    <td>" + entry.userAgent + "</td>\n";
 				  });
 	result += "</table>\n</body>\n</html>\n";

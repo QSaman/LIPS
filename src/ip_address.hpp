@@ -13,4 +13,6 @@ struct IPAddressInfo
 	std::string city;
 	std::string regionName;
 	std::string ispName;
+	std::string organization;
+	std::string as;
 };

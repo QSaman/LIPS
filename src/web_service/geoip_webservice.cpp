@@ -151,7 +151,7 @@ bool FreeGeoIP::processResponse(const std::string& response, IPAddressInfo& ipAd
 IpApi::IpApi()
 {
 	_httpSession.setUrl("http://ip-api.com/json/");
-	_httpSession.setGetParameters("fields=query,status,country,regionName,city,isp,as");
+	_httpSession.setGetParameters("fields=status,country,regionName,city,isp,org,as,query");
 }
 
 bool IpApi::increaseTimerCounter()
@@ -205,6 +205,16 @@ bool IpApi::processResponse(const std::string& response, IPAddressInfo& ipAddres
 		else if (key == "isp")
 		{
 			ipAddress.ispName = value;
+			updated = true;
+		}
+		else if (key == "org")
+		{
+			ipAddress.organization = value;
+			updated = true;
+		}
+		else if (key == "as")
+		{
+			ipAddress.as = value;
 			updated = true;
 		}
 		return true;
