@@ -1,5 +1,5 @@
 # LIPS
-LogIpStatistics (LIPS) is a simple program to fetch IP address information from Apache access log. Basically you filter log file based on criteria like date, user and then `lips` fetch IP information from Multiple sources and generate html reports. For example:
+LogIpStatistics (LIPS) is a simple program to fetch IP address information from Apache access log. Basically you filter log file based on criteria like date, user and then `lips` fetch IP information from Multiple web services, such as [Free IP Geolocation API](https://freegeoip.app/) and [ip-api](https://ip-api.com/). Then it generates HTML reports. For example:
 
 ```
 $ lips -d 2020/05/20 --html --country Canada --country-output /tmp/canada.htm \ 
