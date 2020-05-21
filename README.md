@@ -74,3 +74,4 @@ Since the number of queries is limited, I implement a cache mechanism to avoid m
 ## TODO
 
 * Implement persistent cache management like [SQLite](https://www.sqlite.org/index.html)
+* Use batch API for [ip-api](https://ip-api.com/docs/api:batch). You can send 100 queries in one HTTP request.

@@ -249,13 +249,14 @@ std::string ApacheAccessLog::getItemsHtml() const
 "  <tr>\n"
 "    <th>IP Address</th>\n"
 "    <th>ISP Name</th>\n"
-"    <th>Referer</th>\n"
-"    <th>Datetime</th>\n"
+"    <th>asname</th>\n"
 "    <th>City</th>\n"
 "    <th>Region Name</th>\n"
+"    <th>User Agent</th>\n"
+"    <th>Referer</th>\n"
 "    <th>As</th>\n"
 "    <th>Org</th>\n"
-"    <th>User Agent</th>\n"
+"    <th>Datetime</th>\n"
 "  </tr>\n";
 
 	std::for_each(list.begin(), list.end(),
@@ -264,13 +265,14 @@ std::string ApacheAccessLog::getItemsHtml() const
 				  	result += "  <tr>\n"
 					          "    <td>" + entry.ipInfo.ipAddress + "</td>\n"
 					          "    <td>" + entry.ipInfo.ispName + "</td>\n"
-					          "    <td>" + entry.referer + "</td>\n"
-					          "    <td>" + entry.datetimeStr + "</td>\n"
+					          "    <td>" + entry.ipInfo.asName + "</td>\n"
 					          "    <td>" + entry.ipInfo.city + "</td>\n"
 					          "    <td>" + entry.ipInfo.regionName + "</td>\n"
+					          "    <td>" + entry.userAgent + "</td>\n"
+					          "    <td>" + entry.referer + "</td>\n"
 					          "    <td>" + entry.ipInfo.as + "</td>\n"
 					          "    <td>" + entry.ipInfo.organization + "</td>\n"
-					          "    <td>" + entry.userAgent + "</td>\n";
+					          "    <td>" + entry.datetimeStr + "</td>\n";
 				  });
 	result += "</table>\n</body>\n</html>\n";
 	return result;

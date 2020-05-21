@@ -15,4 +15,5 @@ struct IPAddressInfo
 	std::string ispName;
 	std::string organization;
 	std::string as;
+	std::string asName;
 };
