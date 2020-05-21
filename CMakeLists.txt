@@ -20,7 +20,7 @@ find_package(OpenSSL REQUIRED)
 add_subdirectory(thirdparty/curlpp)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/curlpp/include)
 
-option(PACKAGE_TESTS "Build the tests" ON)
+option(PACKAGE_TESTS "Build the tests" OFF)
 if(PACKAGE_TESTS)
 	enable_testing()
 	add_library(${PROJECT_NAME}-lib ${SRC_LIST})
