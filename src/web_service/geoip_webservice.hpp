@@ -4,9 +4,9 @@
 #include <list>
 #include <memory>
 
-#include "ip_address.hpp"
+#include <ip_address.hpp>
 #include "web_service_timer.hpp"
-#include "http_request_cache.hpp"
+#include <http_cache/http_request_cache.hpp>
 
 class HttpSession
 {

@@ -1,7 +1,7 @@
 #include <boost/date_time/gregorian/parsers.hpp>
 #define private public
 #define protected public
-#include <geoip_webservice.hpp>
+#include <web_service/geoip_webservice.hpp>
 #include <apache_access_log.hpp>
 #undef protected
 #undef private

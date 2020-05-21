@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ip_address.hpp"
-#include "geoip_webservice.hpp"
+#include <ip_address.hpp>
+#include <web_service/geoip_webservice.hpp>
 
 #include <memory>
 #include <vector>

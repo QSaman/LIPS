@@ -1,7 +1,7 @@
 #define private public
 #define protected public
-#include <http_request_manager.hpp>
-#include <geoip_webservice.hpp>
+#include <web_service/http_request_manager.hpp>
+#include <web_service/geoip_webservice.hpp>
 #undef protected
 #undef private
 

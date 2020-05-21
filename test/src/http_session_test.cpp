@@ -1,5 +1,5 @@
 #define private public
-#include <geoip_webservice.hpp>
+#include <web_service/geoip_webservice.hpp>
 #undef private
 
 #include <gtest/gtest.h>

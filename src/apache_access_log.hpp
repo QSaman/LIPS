@@ -5,7 +5,7 @@
 #include <boost/date_time/gregorian/gregorian.hpp> 
 
 #include "ip_address.hpp"
-#include "http_request_manager.hpp"
+#include <web_service/http_request_manager.hpp>
 
 struct ApacheAccessLogEntry
 {
