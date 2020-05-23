@@ -175,7 +175,7 @@ void parseCLI(int argc, const char* argv[])
 
 	if (summaryFile.empty())
 		std::cout << summaryReport << std::flush;
-	else
+	else if (!summaryReport.empty())
 	{
 		std::ofstream fout;
 		fout.exceptions(std::ifstream::badbit | std::ifstream::failbit);

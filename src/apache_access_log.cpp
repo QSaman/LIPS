@@ -242,6 +242,9 @@ std::string ApacheAccessLog::getItemsHtml() const
 		return list;
 	}();
 
+	if (list.empty())
+		return result;
+
 	result = "<!DOCTYPE html>\n<html>\n" + getHtmlHead();
 	result += 
 "<body>\n"
