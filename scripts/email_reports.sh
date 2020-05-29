@@ -4,7 +4,13 @@ sendMailTo="email@example.com"
 country="Canada"
 excludeUser=""
 
-yesterday_date=$(date "+%F" --date="yesterday")                                                                                                                      
+if [ $# -eq 1 ]
+then
+    yesterday_date="$1"
+else
+    yesterday_date=$(date "+%F" --date="yesterday")
+fi
+
 access_log="/var/log/httpd/access_log"                                                                                                                                      
 countryReport="/tmp/country_report_${yesterday_date}.htm"
 summaryReport="/tmp/summary_report_${yesterday_date}.htm"
@@ -12,7 +18,7 @@ summaryReport="/tmp/summary_report_${yesterday_date}.htm"
 rm -f "$countryReport"
 rm -f "$summaryReport"
 
-lips -v -d ${yesterday_date} --html --exclude-user ${excludeUser} --country ${country} -O ${countryReport} -o ${summaryReport} "${access_log}"
+lips -d ${yesterday_date} --html --exclude-user ${excludeUser} --country ${country} -O ${countryReport} -o ${summaryReport} "${access_log}"
 
 if [ $? -ne 0 ]
 then
