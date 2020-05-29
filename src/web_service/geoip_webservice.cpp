@@ -133,7 +133,6 @@ bool FreeGeoIP::processResponse(const std::string& response, IPAddressInfo& ipAd
 		if (key == "country_name")
 		{
 			ipAddress.country = value;
-			updated = true;
 		}
 		else if (key == "region_name")
 		{
@@ -142,6 +141,10 @@ bool FreeGeoIP::processResponse(const std::string& response, IPAddressInfo& ipAd
 		else if (key == "city")
 		{
 			ipAddress.city = value;
+		}
+		else if (key == "time_zone")
+		{
+			updated = !value.empty();	//For example 66.249.82.142 doesn't have country but only continent
 		}
 		return true;
 	});

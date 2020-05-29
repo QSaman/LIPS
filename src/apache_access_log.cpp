@@ -115,9 +115,11 @@ bool ApacheAccessLog::processFile(const std::string& fileName, const boost::greg
 bool ApacheAccessLog::populateIPFields()
 {
 	if (verbose)
-		std::cout << "Fetching countries for IP list..." << std::endl;
+		std::cout << "Fetching countries for IP list...\n" << std::endl;
 	if (!queryCountries())
 		return false;
+	if (verbose)
+		std::cout << "\nFetching ISPs for IP list..." << std::endl;
 	return queryIspNames();
 }
 
@@ -160,9 +162,29 @@ bool ApacheAccessLog::processStream(std::istream& in, const boost::gregorian::da
 
 bool ApacheAccessLog::queryCountries()
 {
+	auto len = _accessLogList.size();
+	std::size_t cnt = 0;
+	std::size_t percentage = 0;
+	if (verbose)
+		std::cout << "0% completed" << std::endl;
 	for (auto& val : _accessLogList)
+	{
 		if (!_httpRequestManager.getCountry(val.ipInfo))
+		{
+			std::cerr << "Cannot fetch country for ip address '" << val.ipInfo.ipAddress << "'" << std::endl;
 			return false;
+		}
+		if (verbose)
+		{
+			++cnt;
+			auto tmp = cnt * 100 / len;
+			if (tmp > percentage)
+			{
+				percentage = tmp;
+				std::cout << percentage << "% is completed" << std::endl;
+			}
+		}
+	}
 	std::sort(_accessLogList.begin(), _accessLogList.end(),
 	          [](const ApacheAccessLogEntry& left, const ApacheAccessLogEntry& right)
 			  {
@@ -176,12 +198,42 @@ bool ApacheAccessLog::queryIspNames()
 	if (_country.empty())
 		return true;
 
+	const std::size_t len = [this]()
+	{
+		std::size_t len = 0;
+		if (verbose)
+		{
+			for (const auto& val : _accessLogList)
+				if (val.ipInfo.country == _country)
+					++len;
+		}
+		return len;
+	}();
+
+	std::size_t cnt = 0;
+	std::size_t percentage = 0;
+
+	if (verbose)
+		std::cout << "0% completed" << std::endl;
 	for (auto& val : _accessLogList)
 	{
 		if (val.ipInfo.country != _country)
 			continue;
 		if (!_httpRequestManager.getISP(val.ipInfo))
+		{
+			std::cerr << "Cannot fetch ISP for IP address '" << val.ipInfo.ipAddress << "'" << std::endl;
 			return false;
+		}
+		if (verbose)
+		{
+			++cnt;
+			auto tmp = cnt * 100 / len;
+			if (tmp > percentage)
+			{
+				percentage = tmp;
+				std::cout << percentage << "% completed" << std::endl;
+			}
+		}
 	}
 	return true;
 }
